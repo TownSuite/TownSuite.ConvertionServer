@@ -1,0 +1,4 @@
+**/obj
+**/bin
+TownSuite.ConversionServer/.vs
+**/appsettings.Development.json

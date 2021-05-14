@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <UserSecretsId>4f57f0b2-9766-49fc-8a62-b60e83c66fca</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.13" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TownSuite.ConversionServer.Common.Models\TownSuite.ConversionServer.Common.Models.csproj" />
+    <ProjectReference Include="..\TownSuite.ConversionServer.Common\TownSuite.ConversionServer.Common.csproj" />
+    <ProjectReference Include="..\TownSuite.ConversionServer.Interfaces\TownSuite.ConversionServer.Interfaces.csproj" />
+    <ProjectReference Include="..\TownSuite.ConversionServer.Utilities.GhostScript\TownSuite.ConversionServer.Utilities.GhostScript.csproj" />
+    <ProjectReference Include="..\TownSuite.ConversionServer.Utilities.Newtonsoft\TownSuite.ConversionServer.Utilities.Newtonsoft.csproj" />
+    <ProjectReference Include="..\TownSuite.ConversionServer.Utilities.TownSuiteLogging\TownSuite.ConversionServer.Utilities.TownSuiteLogging.csproj" />
+  </ItemGroup>
+
+</Project>
