@@ -1,40 +1,31 @@
-﻿using System;
+﻿using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TownSuite.ConversionServer.Common.Models.Conversions;
+using TownSuite.ConversionServer.Interfaces.Common.Bytes;
 using TownSuite.ConversionServer.Interfaces.Utilities.Converters;
 
 namespace TownSuite.ConversionServer.Utilities.GhostScript
 {
-    public class PdfToImageConverter: IPdfToImageBytesConverter
+    public class PdfToImageConverter : IPdfToImageBytesConverter
     {
         public const long DEFAULT_MAX_GIGABYTE_SIZE = 10;
         public const int DEFAULT_MAX_JOB_DURATION_MINUTES = 30;
-        public long MaxBytes { get; set; }
-        public decimal MaxKilobytes
-        {
-            get => MaxBytes / 1000M;
-            set => MaxBytes = (long)Math.Floor(value * 1000M);
-        }
-        public decimal MaxMegabytes
-        {
-            get => MaxKilobytes / 1000M;
-            set => MaxKilobytes = value * 1000M;
-        }
-        public decimal MaxGigabytes
-        {
-            get => MaxMegabytes / 1000M;
-            set => MaxKilobytes = value * 1000M;
-        }
+        public IByteCount MaxBytes;
 
-        public TimeSpan MaxJobDuration;
+        public TimeSpan MaxJobDuration { get; set; }
 
-        public PdfToImageConverter()
+        public string ExecutableLocation { get; set; }
+
+        public PdfToImageConverter(IOptions<GhostScriptSettings> settings, IByteCountFactory byteCount)
         {
-            MaxGigabytes = DEFAULT_MAX_GIGABYTE_SIZE;
-            MaxJobDuration = TimeSpan.FromMinutes(DEFAULT_MAX_JOB_DURATION_MINUTES);
+            MaxBytes = byteCount.FromGigabytes(settings.Value.MaxGigabytesUpload);
+            MaxJobDuration = TimeSpan.FromMinutes(settings.Value.MaxJobDurationMinutes);
+            ExecutableLocation = settings.Value.ExecutableLocation;
         }
 
         public async Task<IEnumerable<byte[]>> Convert(byte[] pdf, CancellationToken cancellationToken = default)
@@ -43,76 +34,71 @@ namespace TownSuite.ConversionServer.Utilities.GhostScript
             {
                 return new List<byte[]>();
             }
-            else if (pdf.Length > MaxBytes)
+            else if (pdf.Length > MaxBytes.Bytes)
             {
-                throw new Exception($"PDF SIZE TOO LARGE. Greater than {MaxMegabytes} megabytes.");
+                throw new Exception($"PDF SIZE TOO LARGE. Greater than {MaxBytes.Megabytes} megabytes.");
             }
 
-            CancellationTokenSource jobDurationToken = new CancellationTokenSource(MaxJobDuration);
-            var fullCancelToken = CancellationTokenSource.CreateLinkedTokenSource(jobDurationToken.Token, cancellationToken);
+            var fullCancelToken = mergeTokenWithDefaultDuration(cancellationToken);
 
-            string tempPath = System.IO.Path.GetTempFileName();
-            string pdfPath = tempPath + ".pdf";
-            System.IO.File.Move(tempPath, pdfPath);
+            string pdfPath = CreateTempPdfPath();
 
             await System.IO.File.WriteAllBytesAsync(pdfPath, pdf, fullCancelToken.Token);
+
             IEnumerable<string> pngPaths = await Convert(pdfPath, fullCancelToken.Token);
 
-            List<byte[]> pngBytes = new List<byte[]>();
-            foreach (string path in pngPaths)
-            {
-                pngBytes.Add(await System.IO.File.ReadAllBytesAsync(path, fullCancelToken.Token));
-            }
+            var pngBytes = await GetBytesFromPaths(pngPaths, fullCancelToken.Token);
 
             CleanFiles(pngPaths, pdfPath);
 
             return pngBytes;
         }
 
+        #region "Private Methods"
+        private async Task<IEnumerable<byte[]>> GetBytesFromPaths(IEnumerable<string> filePaths, CancellationToken cancellationToken)
+        {
+            List<byte[]> bytes = new List<byte[]>();
+
+            foreach (string path in filePaths)
+            {
+                bytes.Add(await System.IO.File.ReadAllBytesAsync(path, cancellationToken));
+            }
+
+            return bytes;
+        }
+
+        private string CreateTempPdfPath()
+        {
+            string tempPath = System.IO.Path.GetTempFileName();
+            string pdfPath = tempPath + ".pdf";
+            System.IO.File.Move(tempPath, pdfPath);
+            return pdfPath;
+        }
+
+        private CancellationTokenSource mergeTokenWithDefaultDuration(CancellationToken cancellationToken)
+        {
+            CancellationTokenSource jobDurationToken = new CancellationTokenSource(MaxJobDuration);
+            return CancellationTokenSource.CreateLinkedTokenSource(jobDurationToken.Token, cancellationToken);
+        }
+
         private async Task<IEnumerable<string>> Convert(string filePath, CancellationToken cancellationToken = default)
         {
-            var fileInfo = new System.IO.FileInfo(filePath);
-            var fileExtensionlessName = System.IO.Path.GetFileNameWithoutExtension(filePath);
-            var resultUnformatted = System.IO.Path.Combine(fileInfo.DirectoryName, fileExtensionlessName + "-{0}.png");
-            var resultPath = string.Format(resultUnformatted, "%03d");
-            var process = new Process()
-            {
-                StartInfo = new ProcessStartInfo()
-                {
-                    FileName = @"C:\Program Files (x86)\gs\gs9.54.0\bin\gswin32c.exe",
-                    Arguments = $"-sDEVICE=pngalpha -o \"{resultPath}\" -r144 \"{filePath}\" -dNOPAUSE -dBATCH",
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
-            };
+            var resultUnformatted = GetUnformattedResultString(filePath);
+            string intArgumentFormatThreePlaces = "%03d";
+            var process = CreateProcess(resultUnformatted, filePath, intArgumentFormatThreePlaces);
             process.Start();
+
             try
             {
-                StringBuilder errorMessage = new StringBuilder();
-                while (!process.StandardError.EndOfStream)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    errorMessage.Append(await process.StandardError.ReadLineAsync());
-                }
+                string errorMessage = await GetMessagesFromStream(process.StandardError, cancellationToken);
 
-                while (!process.HasExited)
-                {
-                    await Task.Delay(200);
-                    cancellationToken.ThrowIfCancellationRequested();
-                }
+                await WaitForProcessExit(process, cancellationToken);
 
-                if (process.ExitCode == 0)
+                bool isApprovedExitCode = process.ExitCode == 0;
+                if (isApprovedExitCode)
                 {
-                    List<string> files = new List<string>();
-                    int i = 1;
-                    for (string potentialFile = string.Format(resultUnformatted, i.ToString("D3")); System.IO.File.Exists(potentialFile) & i < 1000; potentialFile = string.Format(resultUnformatted, i.ToString("D3")))
-                    {
-                        files.Add(potentialFile);
-                        i++;
-                    }
-
-                    return files;
+                    string intFormatThreePlaces = "D3";
+                    return GetExistingFileNamesFromIncrementalName(resultUnformatted, intFormatThreePlaces);
                 }
                 else
                 {
@@ -135,6 +121,63 @@ namespace TownSuite.ConversionServer.Utilities.GhostScript
             }
         }
 
+        private List<string> GetExistingFileNamesFromIncrementalName(string resultUnformatted, string integerStringFormat)
+        {
+            List<string> files = new List<string>();
+            int i = 1;
+            for (string potentialFile = string.Format(resultUnformatted, i.ToString(integerStringFormat)); System.IO.File.Exists(potentialFile) & i < 1000; potentialFile = string.Format(resultUnformatted, i.ToString(integerStringFormat)))
+            {
+                files.Add(potentialFile);
+                i++;
+            }
+
+            return files;
+        }
+
+        private async Task WaitForProcessExit(Process process, CancellationToken cancellationToken)
+        {
+            while (!process.HasExited)
+            {
+                await Task.Delay(200);
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        private async Task<string> GetMessagesFromStream(System.IO.StreamReader stream, CancellationToken cancellationToken)
+        {
+            StringBuilder message = new StringBuilder();
+            while (!stream.EndOfStream)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                message.Append(await stream.ReadLineAsync());
+            }
+            return message.ToString();
+        }
+
+        private string GetUnformattedResultString(string filePath)
+        {
+            var fileInfo = new System.IO.FileInfo(filePath);
+            var fileExtensionlessName = System.IO.Path.GetFileNameWithoutExtension(filePath);
+            return System.IO.Path.Combine(fileInfo.DirectoryName, fileExtensionlessName + "-{0}.png");
+        }
+
+        private Process CreateProcess(string resultUnformatted, string filePath, string intProcessArgumentFormat)
+        {
+            var resultPath = string.Format(resultUnformatted, intProcessArgumentFormat);
+
+            return new Process()
+            {
+                StartInfo = new ProcessStartInfo()
+                {
+                    FileName = ExecutableLocation,
+                    Arguments = $"-sDEVICE=pngalpha -o \"{resultPath}\" -r144 \"{filePath}\" -dNOPAUSE -dBATCH",
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+        }
+
         private void CleanFiles(IEnumerable<string> pngFiles = null, string pdfTempFile = null)
         {
             if (pngFiles != null)
@@ -152,5 +195,6 @@ namespace TownSuite.ConversionServer.Utilities.GhostScript
                 System.IO.File.Delete(pdfTempFile);
             }
         }
+        #endregion
     }
 }

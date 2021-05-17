@@ -6,6 +6,9 @@ EXPOSE 80
 EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+
+RUN apt update && apt upgrade
+RUN apt install ghostscript
 WORKDIR /src
 COPY ["TownSuite.ConversionServer.APISite/TownSuite.ConversionServer.APISite.csproj", "TownSuite.ConversionServer.APISite/"]
 RUN dotnet restore "TownSuite.ConversionServer.APISite/TownSuite.ConversionServer.APISite.csproj"

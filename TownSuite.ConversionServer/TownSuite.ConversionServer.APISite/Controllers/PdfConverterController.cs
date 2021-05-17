@@ -26,18 +26,18 @@ namespace TownSuite.ConversionServer.APISite.Controllers
             _logger = logger;
         }
         [HttpPost]
-        public async Task<ItemRequestModel<IEnumerable<byte[]>>> ToPng(IEnumerable<byte> pdf)
+        public async Task<ItemResponseModel<IEnumerable<byte[]>>> ToPng([FromBody] ItemRequestModel<byte[]> pdf)
         {
             try
             {
-                return new ItemRequestModel<IEnumerable<byte[]>>()
+                return new ItemResponseModel<IEnumerable<byte[]>>()
                 {
-                    Data = await _converter.Convert(pdf?.ToArray())
+                    Data = await _converter.Convert(pdf?.Data)
                 };
             } catch (Exception ex)
             {
                 await _logger.LogError(ex);
-                return new ItemRequestModel<IEnumerable<byte[]>>()
+                return new ItemResponseModel<IEnumerable<byte[]>>()
                 {
                     Error = _responseError.Create(ex)
                 };

@@ -5,6 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TownSuite.ConversionServer.Common.Models\TownSuite.ConversionServer.Common.Models.csproj" />
     <ProjectReference Include="..\TownSuite.ConversionServer.Interfaces\TownSuite.ConversionServer.Interfaces.csproj" />
   </ItemGroup>
 
