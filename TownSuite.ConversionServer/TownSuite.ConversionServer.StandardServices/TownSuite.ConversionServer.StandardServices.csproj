@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TownSuite.ConversionServer.Common.Models\TownSuite.ConversionServer.Common.Models.csproj" />
+    <ProjectReference Include="..\TownSuite.ConversionServer.Common\TownSuite.ConversionServer.Common.csproj" />
+    <ProjectReference Include="..\TownSuite.ConversionServer.Interfaces\TownSuite.ConversionServer.Interfaces.csproj" />
+    <ProjectReference Include="..\TownSuite.ConversionServer.Utilities.GhostScript\TownSuite.ConversionServer.Utilities.GhostScript.csproj" />
+    <ProjectReference Include="..\TownSuite.ConversionServer.Utilities.Newtonsoft\TownSuite.ConversionServer.Utilities.Newtonsoft.csproj" />
+    <ProjectReference Include="..\TownSuite.ConversionServer.Utilities.TownSuiteLogging\TownSuite.ConversionServer.Utilities.TownSuiteLogging.csproj" />
+  </ItemGroup>
+
+</Project>
