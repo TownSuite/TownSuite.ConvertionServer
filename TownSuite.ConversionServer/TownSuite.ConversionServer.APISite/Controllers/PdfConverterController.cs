@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace TownSuite.ConversionServer.APISite.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class PdfConverterController : Controller
     {
         Interfaces.Utilities.Converters.IPdfToImageBytesConverter _converter;

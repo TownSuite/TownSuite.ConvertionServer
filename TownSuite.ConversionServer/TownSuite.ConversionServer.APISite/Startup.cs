@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ZNetCS.AspNetCore.Authentication.Basic;
 
 namespace TownSuite.ConversionServer.APISite
 {
@@ -26,14 +27,21 @@ namespace TownSuite.ConversionServer.APISite
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
+            services.AddSingleton<BasicAuthConfigs>(i => Configuration.GetSection("BasicAuth").Get<BasicAuthConfigs>());
             services.AddControllers();
+            services.AddScoped<AuthenticationEvents>();
             services.AddHttpClient();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "TownSuite.ConversionServer.APISite", Version = "v1" });
             });
-
+            services.AddAuthentication(BasicAuthenticationDefaults.AuthenticationScheme)
+           .AddBasicAuthentication(
+               options =>
+               {
+                   options.Realm = "TownSuite ConversionServer";
+                   options.EventsType = typeof(AuthenticationEvents);
+               });
             var standardServices = new StandardServices.StandardServices();
             standardServices.AddStandardServices(services);
         }
@@ -47,6 +55,8 @@ namespace TownSuite.ConversionServer.APISite
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "TownSuite.ConversionServer.APISite v1"));
             }
+
+            app.UseAuthentication();
 
             app.UseHttpsRedirection();
 
