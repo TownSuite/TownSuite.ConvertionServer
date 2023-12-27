@@ -1,13 +1,13 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 RUN apt update && apt upgrade -y
 RUN apt install ghostscript -y
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
+EXPOSE 8443
 
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ["TownSuite.ConversionServer.APISite/TownSuite.ConversionServer.APISite.csproj", "TownSuite.ConversionServer.APISite/"]
 COPY ["TownSuite.ConversionServer.Common.Models/TownSuite.ConversionServer.Common.Models.csproj", "TownSuite.ConversionServer.Common.Models/"]
@@ -28,4 +28,5 @@ RUN dotnet publish "TownSuite.ConversionServer.APISite.csproj" -c Release -o /ap
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+USER $APP_UID
 ENTRYPOINT ["dotnet", "TownSuite.ConversionServer.APISite.dll"]
