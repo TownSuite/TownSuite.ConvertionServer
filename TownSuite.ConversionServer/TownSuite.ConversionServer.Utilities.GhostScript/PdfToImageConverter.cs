@@ -57,21 +57,14 @@ namespace TownSuite.ConversionServer.Utilities.GhostScript
 
         public async Task<IEnumerable<byte[]>> Convert(Stream pdf, CancellationToken cancellationToken = default)
         {
-            if (pdf.Length <= 0)
-            {
-                return new List<byte[]>();
-            }
-            else if (pdf.Length > MaxBytes.Bytes)
-            {
-                throw new Exception($"PDF SIZE TOO LARGE. Greater than {MaxBytes.Megabytes} megabytes.");
-            }
-
             var fullCancelToken = mergeTokenWithDefaultDuration(cancellationToken);
 
             string pdfPath = CreateTempPdfPath();
 
-            using var fileStream = System.IO.File.OpenWrite(pdfPath);
-            await pdf.CopyToAsync(fileStream, fullCancelToken.Token);
+            using (var fileStream = System.IO.File.OpenWrite(pdfPath))
+            {
+                await pdf.CopyToAsync(fileStream, fullCancelToken.Token);
+            }
 
             IEnumerable<string> pngPaths = await Convert(pdfPath, fullCancelToken.Token);
 
