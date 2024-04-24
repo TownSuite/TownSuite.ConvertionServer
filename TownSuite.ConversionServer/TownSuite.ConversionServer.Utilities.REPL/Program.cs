@@ -1,8 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using System.Text;
 using TownSuite.ConversionServer.Common.Models.Errors;
-using TownSuite.ConversionServer.Utilities.Newtonsoft;
+using TownSuite.ConversionServer.Utilities.REPL;
 
 while (true)
 {
@@ -29,16 +28,8 @@ while (true)
         }
         using var fileStream = System.IO.File.OpenRead(filePath);
 
-        using var client = new HttpClient();
-        using var request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:8443/PdfConverter/FromStream");
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(UTF8Encoding.UTF8.GetBytes("username:password")));
-        using var content = new StreamContent(fileStream);
-        request.Content = content;
-        using var response = await client.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-        var resultString = await response.Content.ReadAsStringAsync();
-        var jsonConverter = new NewtonsoftJsonSerializer();
-        var results = jsonConverter.Deserialize<ItemResponseModel<IEnumerable<byte[]>>>(resultString);
+        var client = new ConversionClient();
+        var results = await client.ConvertPdfAsync(fileStream);
 
         var folderPath = Path.GetDirectoryName(filePath);
         if (string.IsNullOrEmpty(folderPath))
