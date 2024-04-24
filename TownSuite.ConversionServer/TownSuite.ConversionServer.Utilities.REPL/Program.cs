@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Net.Mime;
 using TownSuite.ConversionServer.Common.Models.Errors;
 using TownSuite.ConversionServer.Utilities.REPL;
 
@@ -26,24 +27,28 @@ while (true)
             Console.WriteLine("Missing input.");
             return;
         }
-        using var fileStream = System.IO.File.OpenRead(filePath);
-
-        var client = new ConversionClient();
-        var results = await client.ConvertPdfAsync(fileStream);
-
         var folderPath = Path.GetDirectoryName(filePath);
         if (string.IsNullOrEmpty(folderPath))
         {
             Console.WriteLine("Invalid folder.");
             return;
         }
-        var counter = 0;
-        foreach (var item in results.Data)
-        {
-            counter++;
-            var pngPath = Path.Combine(folderPath, $"{counter}.png");
-            await File.WriteAllBytesAsync(pngPath, item);
-        }
+        
+
+        using var fileStream = System.IO.File.OpenRead(filePath);
+
+        var client = new ConversionClient();
+        await client.ConvertPdfAsync(fileStream,
+            async (results, contentType) =>
+            {
+                string pngPath;
+                if (contentType == MediaTypeNames.Application.Zip)
+                    pngPath = Path.Combine(folderPath, $"result.zip");
+                else
+                    pngPath = Path.Combine(folderPath, $"result.png");
+                using var fileResult = File.OpenWrite(pngPath);
+                await results.CopyToAsync(fileResult);
+            });
     }
     else if (input.Equals("exit", StringComparison.OrdinalIgnoreCase))
     {

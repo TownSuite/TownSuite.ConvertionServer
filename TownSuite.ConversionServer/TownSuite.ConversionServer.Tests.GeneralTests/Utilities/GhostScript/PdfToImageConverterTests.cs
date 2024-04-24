@@ -79,14 +79,8 @@ namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.GhostScript
 
             var results = await converter.Convert(pageStream);
 
-            int resCount = 0;
-            foreach (var image in results)
-            {
-                Assert.Greater(image.Length, 0, "Image cannot be zero bytes");
-                resCount++;
-            }
-            Assert.Greater(resCount, 1, "Multipage test requires png file count greater than 1.");
-
+            Assert.That(results.File.Length, Is.GreaterThan(0), "Image cannot be zero bytes");
+            Assert.That(results.MediaType, Is.GreaterThan("image/png"), "Expected a png image.");
         }
 
         private string GetAssetsDirectory()

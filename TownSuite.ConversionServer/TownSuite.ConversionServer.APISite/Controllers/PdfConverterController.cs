@@ -47,24 +47,21 @@ namespace TownSuite.ConversionServer.APISite.Controllers
             }
         }
 
-        [HttpPost]
-        [Route(nameof(FromStream))]
-        public async Task<ItemResponseModel<IEnumerable<byte[]>>> FromStream()
+        [HttpPost(nameof(FromStream))]
+        public async Task<Stream> FromStream()
         {
             try
             {
-                return new ItemResponseModel<IEnumerable<byte[]>>()
-                {
-                    Data = await _converter.Convert(Request.Body)
-                };
+                using var request = Request.Body;
+                var results = await _converter.Convert(request);
+                Response.Headers.ContentType = results.MediaType;
+                return results.File;
             }
             catch (Exception ex)
             {
                 await _logger.LogError(ex);
-                return new ItemResponseModel<IEnumerable<byte[]>>()
-                {
-                    Error = _responseError.Create(ex)
-                };
+                Response.StatusCode = 500;
+                return null;
             }
         }
     }

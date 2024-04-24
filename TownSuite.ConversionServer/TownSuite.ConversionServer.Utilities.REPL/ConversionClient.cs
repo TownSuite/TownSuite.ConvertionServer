@@ -20,7 +20,7 @@ namespace TownSuite.ConversionServer.Utilities.REPL
             PopulateSettings("appsettings.Development.json");
         }
 
-        public async Task<ItemResponseModel<IEnumerable<byte[]>>> ConvertPdfAsync(Stream body)
+        public async Task ConvertPdfAsync(Stream body, Func<Stream, string, Task> withPng)
         {
             using var client = new HttpClient();
             var url = _settings.ApiUrl.TrimEnd('/') + "/PdfConverter/FromStream";
@@ -34,9 +34,7 @@ namespace TownSuite.ConversionServer.Utilities.REPL
             request.Content = content;
             using var response = await client.SendAsync(request);
             response.EnsureSuccessStatusCode();
-            var resultString = await response.Content.ReadAsStringAsync();
-            var jsonConverter = new NewtonsoftJsonSerializer();
-            return jsonConverter.Deserialize<ItemResponseModel<IEnumerable<byte[]>>>(resultString);
+            await withPng(await response.Content.ReadAsStreamAsync(), response.Content.Headers.ContentType?.MediaType ?? string.Empty);
         }
 
         private void PopulateSettings(string configFile)
