@@ -1,15 +1,11 @@
-﻿using Microsoft.Extensions.Options;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using TownSuite.ConversionServer.Common.Bytes;
-using TownSuite.ConversionServer.Common.Models.Conversions;
 using TownSuite.ConversionServer.StandardServices;
-using TownSuite.ConversionServer.Utilities.GhostScript;
 using TownSuite.ConversionServer.Interfaces.Utilities.Converters;
 
 namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.GhostScript
@@ -86,7 +82,7 @@ namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.GhostScript
         private string GetAssetsDirectory()
         {
             string exeLocation = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            var dir = System.IO.Path.Combine(exeLocation, "Utilities\\GhostScript\\Assets");
+            var dir = System.IO.Path.Combine(exeLocation, "Utilities", "GhostScript", "Assets");
             Assert.IsTrue(System.IO.Directory.Exists(dir), "Testing assets directory missing. Ensure in same directory as executable.");
             return dir;
         }
