@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using TownSuite.ConversionServer.APISite.Models;
@@ -46,5 +47,25 @@ namespace TownSuite.ConversionServer.APISite.Controllers
             }
         }
 
+        [HttpPost]
+        [Route(nameof(FromStream))]
+        public async Task<ItemResponseModel<IEnumerable<byte[]>>> FromStream()
+        {
+            try
+            {
+                return new ItemResponseModel<IEnumerable<byte[]>>()
+                {
+                    Data = await _converter.Convert(Request.Body)
+                };
+            }
+            catch (Exception ex)
+            {
+                await _logger.LogError(ex);
+                return new ItemResponseModel<IEnumerable<byte[]>>()
+                {
+                    Error = _responseError.Create(ex)
+                };
+            }
+        }
     }
 }

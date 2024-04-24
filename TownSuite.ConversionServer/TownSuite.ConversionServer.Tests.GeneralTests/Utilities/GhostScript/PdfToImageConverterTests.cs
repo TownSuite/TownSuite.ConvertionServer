@@ -67,6 +67,28 @@ namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.GhostScript
             Assert.Greater(resCount, 1, "Multipage test requires png file count greater than 1.");
         }
 
+        [Test]
+        public async Task ConvertStreamTest()
+        {
+            var converter = _dependencyInjection.ServiceProvider.GetService<IPdfToImageBytesConverter>();
+            var singlePage = System.IO.Path.Combine(GetAssetsDirectory(), "single_page_test.pdf");
+
+            Assert.IsTrue(System.IO.File.Exists(singlePage));
+
+            using var pageStream = System.IO.File.OpenRead(singlePage);
+
+            var results = await converter.Convert(pageStream);
+
+            int resCount = 0;
+            foreach (var image in results)
+            {
+                Assert.Greater(image.Length, 0, "Image cannot be zero bytes");
+                resCount++;
+            }
+            Assert.Greater(resCount, 1, "Multipage test requires png file count greater than 1.");
+
+        }
+
         private string GetAssetsDirectory()
         {
             string exeLocation = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
