@@ -76,7 +76,7 @@ namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.GhostScript
             var results = await converter.Convert(pageStream);
 
             Assert.That(results.File.Length, Is.GreaterThan(0), "Image cannot be zero bytes");
-            Assert.That(results.MediaType, Is.GreaterThan("image/png"), "Expected a png image.");
+            Assert.That(results.MediaType, Is.EqualTo("image/png"), "Expected a png image.");
         }
 
         private string GetAssetsDirectory()
