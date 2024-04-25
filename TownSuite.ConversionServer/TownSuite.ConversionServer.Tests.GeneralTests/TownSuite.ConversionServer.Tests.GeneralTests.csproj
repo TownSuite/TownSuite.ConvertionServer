@@ -11,10 +11,13 @@
     <None Remove="appsettings.json" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="Exists('appsettings.Development.json')">
     <Content Include="appsettings.Development.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <DependentUpon>appsettings.json</DependentUpon>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

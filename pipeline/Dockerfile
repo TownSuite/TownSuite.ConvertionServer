@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0
-RUN apt update && apt upgrade -y
-RUN apt install ghostscript -y
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install ghostscript -y
 WORKDIR /app
 
 COPY . .
