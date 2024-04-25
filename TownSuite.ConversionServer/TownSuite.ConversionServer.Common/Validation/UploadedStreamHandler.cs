@@ -19,7 +19,7 @@ namespace TownSuite.ConversionServer.Common.Validation
 
         public void EnsureStreamHasData()
         {
-            if (_stream.CanSeek == true)
+            if (_stream.CanSeek == true && _stream.Length == 0)
             {
                 throw new ValidationException("The file given is empty.");
             }

@@ -14,6 +14,17 @@ namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.Validation
     public class UploadedStreamHandlerTests
     {
         [Test]
+        public void Does_ensure_stream_has_data()
+        {
+            using var stream = new MemoryStream([1]);
+
+            var streamValidator = new UploadedStreamHandler(stream);
+            var test = () => streamValidator.EnsureStreamHasData();
+
+            Assert.That(test, Throws.Nothing);
+        }
+
+        [Test]
         public void Does_throw_error_when_no_data_in_stream()
         {
             using var stream = new MemoryStream([]);
