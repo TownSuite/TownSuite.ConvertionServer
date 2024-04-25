@@ -45,5 +45,18 @@ namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.Validation
 
             Assert.That(test, Throws.Nothing);
         }
+
+        [Test]
+        public async Task Does_copy_stream_data()
+        {
+            using var streamToCopyFrom = new RestrictedStream([0x1]);
+            using var streamToCopyTo = new MemoryStream();
+
+            var streamValidator = new UploadedStreamHandler(streamToCopyFrom);
+            await streamValidator.CopyToAsync(streamToCopyTo);
+
+            Assert.That(streamToCopyTo.Length, Is.EqualTo(1));
+            Assert.That(streamToCopyTo.ReadByte(), Is.EqualTo(0x1));
+        }
     }
 }

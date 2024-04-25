@@ -17,6 +17,12 @@ namespace TownSuite.ConversionServer.Common.Validation
             _stream = stream;
         }
 
+        public async Task CopyToAsync(Stream streamToCopyTo)
+        {
+            await _stream.CopyToAsync(streamToCopyTo);
+            streamToCopyTo.Seek(0, SeekOrigin.Begin);
+        }
+
         public void EnsureStreamHasData()
         {
             if (_stream.CanSeek == true && _stream.Length == 0)
