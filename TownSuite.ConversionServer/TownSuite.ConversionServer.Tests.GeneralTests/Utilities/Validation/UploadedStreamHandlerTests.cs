@@ -11,17 +11,28 @@ using TownSuite.ConversionServer.Common.Validation;
 namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.Validation
 {
     [TestFixture]
-    public class UploadedStreamValidatorTests
+    public class UploadedStreamHandlerTests
     {
         [Test]
         public void Does_throw_error_when_no_data_in_stream()
         {
-            var stream = new RestrictedStream(new byte[0]);
+            using var stream = new MemoryStream([]);
 
-            var streamValidator = new UploadedStreamValidator(stream);
+            var streamValidator = new UploadedStreamHandler(stream);
             var test = () => streamValidator.EnsureStreamHasData();
 
             Assert.That(test, Throws.InstanceOf<ValidationException>());
+        }
+
+        [Test]
+        public void Does_not_throw_error_when_no_data_in_stream_and_seek_unavailable()
+        {
+            using var stream = new RestrictedStream([]);
+
+            var streamValidator = new UploadedStreamHandler(stream);
+            var test = () => streamValidator.EnsureStreamHasData();
+
+            Assert.That(test, Throws.Nothing);
         }
     }
 }

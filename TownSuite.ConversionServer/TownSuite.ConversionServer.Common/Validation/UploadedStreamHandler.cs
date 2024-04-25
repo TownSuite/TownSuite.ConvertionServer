@@ -8,18 +8,21 @@ using TownSuite.ConversionServer.Common.Models.Errors;
 
 namespace TownSuite.ConversionServer.Common.Validation
 {
-    public class UploadedStreamValidator
+    public class UploadedStreamHandler
     {
         private readonly Stream _stream;
 
-        public UploadedStreamValidator(Stream stream)
+        public UploadedStreamHandler(Stream stream)
         {
             _stream = stream;
         }
 
         public void EnsureStreamHasData()
         {
-            throw new ValidationException("The file given is empty.");
+            if (_stream.CanSeek == true)
+            {
+                throw new ValidationException("The file given is empty.");
+            }
         }
     }
 }
