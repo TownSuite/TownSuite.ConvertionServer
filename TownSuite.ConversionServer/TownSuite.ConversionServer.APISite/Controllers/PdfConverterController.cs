@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using TownSuite.ConversionServer.APISite.Models;
+using TownSuite.ConversionServer.Common.Validation;
 using TownSuite.ConversionServer.Interfaces.Common.Errors;
 using TownSuite.ConversionServer.Interfaces.Utilities.Logging;
 
@@ -53,7 +54,9 @@ namespace TownSuite.ConversionServer.APISite.Controllers
             try
             {
                 using var request = Request.Body;
-                var results = await _converter.Convert(request);
+                var streamHandler = new UploadedStreamHandler(request);
+                var results = await _converter.Convert(streamHandler);
+
                 Response.Headers.ContentType = results.MediaType;
                 return results.File;
             }

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TownSuite.ConversionServer.Common.Bytes;
 
-namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.Bytes
+namespace TownSuite.ConversionServer.Tests.GeneralTests.Common.Bytes
 {
     [TestFixture]
     public class ByteCountTests

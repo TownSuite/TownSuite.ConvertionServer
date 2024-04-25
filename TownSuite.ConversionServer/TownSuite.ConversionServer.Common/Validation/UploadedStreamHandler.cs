@@ -7,10 +7,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using TownSuite.ConversionServer.Common.Models.Errors;
 using TownSuite.ConversionServer.Interfaces.Common.Bytes;
+using TownSuite.ConversionServer.Interfaces.Common.Validation;
 
 namespace TownSuite.ConversionServer.Common.Validation
 {
-    public class UploadedStreamHandler
+    public class UploadedStreamHandler : IUploadedStreamHandler
     {
         private readonly Stream _stream;
         private const int MAX_BUFFER_SIZE = 80000;
@@ -24,7 +25,7 @@ namespace TownSuite.ConversionServer.Common.Validation
         {
             var totalBytesRead = 0L;
             var lastRead = -1;
-            while (lastRead != 0 && maxBytes.Bytes > totalBytesRead) 
+            while (lastRead != 0 && maxBytes.Bytes > totalBytesRead)
             {
                 var buffer_length = (int)Math.Min(MAX_BUFFER_SIZE, maxBytes.Bytes - totalBytesRead);
                 var buffer = new byte[buffer_length];

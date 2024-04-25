@@ -10,7 +10,7 @@ using TownSuite.ConversionServer.Common.Models.Errors;
 using TownSuite.ConversionServer.Common.Validation;
 using TownSuite.ConversionServer.Interfaces.Common.Bytes;
 
-namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.Validation
+namespace TownSuite.ConversionServer.Tests.GeneralTests.Common.Validation
 {
     [TestFixture]
     public class UploadedStreamHandlerTests

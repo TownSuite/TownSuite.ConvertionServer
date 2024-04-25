@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using TownSuite.ConversionServer.Common.Models;
 using TownSuite.ConversionServer.Common.Models.Conversions;
 using TownSuite.ConversionServer.Interfaces.Common.Bytes;
+using TownSuite.ConversionServer.Interfaces.Common.Validation;
 using TownSuite.ConversionServer.Interfaces.Utilities.Converters;
 
 namespace TownSuite.ConversionServer.Utilities.GhostScript
@@ -59,7 +60,7 @@ namespace TownSuite.ConversionServer.Utilities.GhostScript
             return pngBytes;
         }
 
-        public async Task<StreamFileResults> Convert(Stream pdf, CancellationToken cancellationToken = default)
+        public async Task<StreamFileResults> Convert(IUploadedStreamHandler streamHandler, CancellationToken cancellationToken = default)
         {
             var fullCancelToken = mergeTokenWithDefaultDuration(cancellationToken);
 
@@ -67,7 +68,7 @@ namespace TownSuite.ConversionServer.Utilities.GhostScript
 
             using (var fileStream = System.IO.File.OpenWrite(pdfPath))
             {
-                await pdf.CopyToAsync(fileStream, fullCancelToken.Token);
+                await streamHandler.CopyToAsync(fileStream, MaxBytes, fullCancelToken.Token);
             }
 
             var pngPaths = await Convert(pdfPath, fullCancelToken.Token);

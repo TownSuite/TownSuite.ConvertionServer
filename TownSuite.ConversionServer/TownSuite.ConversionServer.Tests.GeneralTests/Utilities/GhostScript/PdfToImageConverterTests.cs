@@ -7,31 +7,30 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using TownSuite.ConversionServer.StandardServices;
 using TownSuite.ConversionServer.Interfaces.Utilities.Converters;
+using TownSuite.ConversionServer.Common.Validation;
 
 namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.GhostScript
 {
     [TestFixture]
     class PdfToImageConverterTests
     {
-        private DefaultDependencyInjection _dependencyInjection;
+        private IPdfToImageBytesConverter _converter;
 
         [SetUp]
         public void InitConfiguration()
         {
-            _dependencyInjection = new DefaultDependencyInjection();
+            var dependencyInjection = new DefaultDependencyInjection();
+            _converter = dependencyInjection.ServiceProvider.GetService<IPdfToImageBytesConverter>();
         }
         
         [Test]
         public async Task ConvertTest()
         {
-            var converter = _dependencyInjection.ServiceProvider.GetService<IPdfToImageBytesConverter>();
             var singlePage = System.IO.Path.Combine(GetAssetsDirectory(), "single_page_test.pdf");
-
             Assert.IsTrue(System.IO.File.Exists(singlePage));
-
             var pageBytes = await System.IO.File.ReadAllBytesAsync(singlePage);
 
-            var res = await converter.Convert(pageBytes);
+            var res = await _converter.Convert(pageBytes);
 
             int resCount = 0;
             foreach (var image in res)
@@ -46,13 +45,11 @@ namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.GhostScript
         [Test]
         public async Task ConvertMultiPageTest()
         {
-            var converter = _dependencyInjection.ServiceProvider.GetService<IPdfToImageBytesConverter>();
             var multiPage = System.IO.Path.Combine(GetAssetsDirectory(), "multi_page_pdf.pdf");
-
             Assert.IsTrue(System.IO.File.Exists(multiPage));
             var pageBytes = await System.IO.File.ReadAllBytesAsync(multiPage);
 
-            var res = await converter.Convert(pageBytes);
+            var res = await _converter.Convert(pageBytes);
 
             int resCount = 0;
             foreach (var image in res)
@@ -66,14 +63,11 @@ namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.GhostScript
         [Test]
         public async Task ConvertStreamTest()
         {
-            var converter = _dependencyInjection.ServiceProvider.GetService<IPdfToImageBytesConverter>();
             var singlePage = System.IO.Path.Combine(GetAssetsDirectory(), "single_page_test.pdf");
-
-            Assert.IsTrue(System.IO.File.Exists(singlePage));
-
             using var pageStream = System.IO.File.OpenRead(singlePage);
+            var streamHandler = new UploadedStreamHandler(pageStream);
 
-            var results = await converter.Convert(pageStream);
+            var results = await _converter.Convert(streamHandler);
 
             Assert.That(results.File.Length, Is.GreaterThan(0), "Image cannot be zero bytes");
             Assert.That(results.MediaType, Is.EqualTo("image/png"), "Expected a png image.");

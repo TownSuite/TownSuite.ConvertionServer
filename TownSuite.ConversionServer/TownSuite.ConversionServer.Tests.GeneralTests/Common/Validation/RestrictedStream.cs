@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.Validation
+namespace TownSuite.ConversionServer.Tests.GeneralTests.Common.Validation
 {
     /// <summary>
     /// Stream's given over networks may not allow Length and other methods. 
@@ -16,8 +16,8 @@ namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.Validation
     {
         private readonly Stream _stream;
 
-        public RestrictedStream(byte[] data) 
-        { 
+        public RestrictedStream(byte[] data)
+        {
             _stream = new MemoryStream(data);
         }
 
