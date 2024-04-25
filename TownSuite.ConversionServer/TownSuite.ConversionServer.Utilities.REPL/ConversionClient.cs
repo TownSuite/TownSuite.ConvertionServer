@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 
 namespace TownSuite.ConversionServer.Utilities.REPL
@@ -20,19 +21,34 @@ namespace TownSuite.ConversionServer.Utilities.REPL
 
         public async Task ConvertPdfAsync(Stream body, Func<Stream, string, Task> withPng)
         {
-            using var client = new HttpClient();
-            var url = _settings.ApiUrl.TrimEnd('/') + "/PdfConverter/StreamToPng";
-            using var request = new HttpRequestMessage(HttpMethod.Post, url);
+            if (_settings.ApiUrl is null || _settings.Username is null || _settings.Password is null)
+            {
+                throw new Exception("Missing settings. The ApiUrl, Username and Password are required.");
+            }
 
-            var credentials = $"{_settings.Username}:{_settings.Password}";
-            var basicAuth = Convert.ToBase64String(UTF8Encoding.UTF8.GetBytes(credentials));
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", basicAuth);
+            using var client = new HttpClient();
+            using HttpRequestMessage request = GetRequest(_settings.ApiUrl);
+            request.Headers.Authorization = GetAuthHeader(request);
 
             using var content = new StreamContent(body);
             request.Content = content;
+
             using var response = await client.SendAsync(request);
             response.EnsureSuccessStatusCode();
             await withPng(await response.Content.ReadAsStreamAsync(), response.Content.Headers.ContentType?.MediaType ?? string.Empty);
+        }
+
+        private HttpRequestMessage GetRequest(string apiUrl)
+        {
+            var url = apiUrl.TrimEnd('/') + "/PdfConverter/StreamToPng";
+            return new HttpRequestMessage(HttpMethod.Post, url);
+        }
+
+        private AuthenticationHeaderValue GetAuthHeader(HttpRequestMessage request)
+        {
+            var credentials = $"{_settings.Username}:{_settings.Password}";
+            var basicAuth = Convert.ToBase64String(UTF8Encoding.UTF8.GetBytes(credentials));
+            return new AuthenticationHeaderValue("Basic", basicAuth);
         }
 
         private void PopulateSettings(string configFile)
