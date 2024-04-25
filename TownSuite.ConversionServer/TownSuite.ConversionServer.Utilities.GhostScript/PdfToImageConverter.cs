@@ -104,6 +104,7 @@ namespace TownSuite.ConversionServer.Utilities.GhostScript
             else
             {
                 var stream = await GetZipFileAsync(filePaths);
+                stream.Seek(0, SeekOrigin.Begin);
                 return new StreamFileResults(stream, MediaTypeNames.Application.Zip);
             }
         }
@@ -122,7 +123,6 @@ namespace TownSuite.ConversionServer.Utilities.GhostScript
                 using var zipStream = entry.Open();
                 await fileStream.CopyToAsync(zipStream);
             }
-            stream.Seek(0, SeekOrigin.Begin);
             return stream;
         }
 

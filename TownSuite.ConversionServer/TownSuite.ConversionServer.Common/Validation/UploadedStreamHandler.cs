@@ -35,7 +35,7 @@ namespace TownSuite.ConversionServer.Common.Validation
                 token.ThrowIfCancellationRequested();
             }
 
-            if (_stream.ReadByte() != -1)
+            if (await _stream.ReadAsync(new byte[1], 0, 1) != 0)
             {
                 throw new ValidationException($"PDF SIZE TOO LARGE. Greater than {maxBytes.Megabytes} megabytes.");
             }

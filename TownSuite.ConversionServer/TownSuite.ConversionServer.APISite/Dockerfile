@@ -3,13 +3,11 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 RUN apt update && apt upgrade -y
 RUN apt install ghostscript -y
-USER app
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8443
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["TownSuite.ConversionServer.APISite/TownSuite.ConversionServer.APISite.csproj", "TownSuite.ConversionServer.APISite/"]
 COPY ["TownSuite.ConversionServer.Common.Models/TownSuite.ConversionServer.Common.Models.csproj", "TownSuite.ConversionServer.Common.Models/"]
@@ -22,13 +20,13 @@ COPY ["TownSuite.ConversionServer.Utilities.TownSuiteLogging/TownSuite.Conversio
 RUN dotnet restore "./TownSuite.ConversionServer.APISite/TownSuite.ConversionServer.APISite.csproj"
 COPY . .
 WORKDIR "/src/TownSuite.ConversionServer.APISite"
-RUN dotnet build "./TownSuite.ConversionServer.APISite.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "./TownSuite.ConversionServer.APISite.csproj" -c Release -o /app/build
 
 FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./TownSuite.ConversionServer.APISite.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./TownSuite.ConversionServer.APISite.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+USER $APP_UID
 ENTRYPOINT ["dotnet", "TownSuite.ConversionServer.APISite.dll"]
