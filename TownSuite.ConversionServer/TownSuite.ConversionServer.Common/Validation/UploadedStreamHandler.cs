@@ -21,11 +21,12 @@ namespace TownSuite.ConversionServer.Common.Validation
         {
             await _stream.CopyToAsync(streamToCopyTo);
             streamToCopyTo.Seek(0, SeekOrigin.Begin);
+            EnsureStreamHasData(streamToCopyTo);
         }
 
-        public void EnsureStreamHasData()
+        private void EnsureStreamHasData(Stream stream)
         {
-            if (_stream.CanSeek == true && _stream.Length == 0)
+            if (stream.Length == 0)
             {
                 throw new ValidationException("The file given is empty.");
             }
