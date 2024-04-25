@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using TownSuite.ConversionServer.Utilities.Newtonsoft;
 
 namespace TownSuite.ConversionServer.Utilities.REPL
 {
@@ -23,7 +21,7 @@ namespace TownSuite.ConversionServer.Utilities.REPL
         public async Task ConvertPdfAsync(Stream body, Func<Stream, string, Task> withPng)
         {
             using var client = new HttpClient();
-            var url = _settings.ApiUrl.TrimEnd('/') + "/PdfConverter/FromStream";
+            var url = _settings.ApiUrl.TrimEnd('/') + "/PdfConverter/StreamToPng";
             using var request = new HttpRequestMessage(HttpMethod.Post, url);
 
             var credentials = $"{_settings.Username}:{_settings.Password}";

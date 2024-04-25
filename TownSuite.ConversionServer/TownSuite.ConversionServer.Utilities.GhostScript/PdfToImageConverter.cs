@@ -111,17 +111,16 @@ namespace TownSuite.ConversionServer.Utilities.GhostScript
         private async Task<Stream> GetZipFileAsync(IEnumerable<string> filePaths)
         {
             var stream = new MemoryStream();
-            using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, true))
-            {
-                foreach (var filePath in filePaths)
-                {
-                    var fileName = Path.GetFileName(filePath);
-                    var entry = zip.CreateEntry(fileName);
+            using var zip = new ZipArchive(stream, ZipArchiveMode.Create, true);
 
-                    using var fileStream = System.IO.File.OpenRead(filePath);
-                    using var zipStream = entry.Open();
-                    await fileStream.CopyToAsync(zipStream);
-                }
+            foreach (var filePath in filePaths)
+            {
+                var fileName = Path.GetFileName(filePath);
+                var entry = zip.CreateEntry(fileName);
+
+                using var fileStream = System.IO.File.OpenRead(filePath);
+                using var zipStream = entry.Open();
+                await fileStream.CopyToAsync(zipStream);
             }
             stream.Seek(0, SeekOrigin.Begin);
             return stream;

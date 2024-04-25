@@ -1,7 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using System.Net.Mime;
-using TownSuite.ConversionServer.Common.Models.Errors;
 using TownSuite.ConversionServer.Utilities.REPL;
 
 while (true)
@@ -34,7 +33,6 @@ while (true)
             return;
         }
         
-
         using var fileStream = System.IO.File.OpenRead(filePath);
 
         var client = new ConversionClient();
@@ -54,11 +52,4 @@ while (true)
     {
         break;
     }
-}
-
-
-public class ItemResponseModel<T>
-{
-    public T Data { get; set; }
-    public ResponseErrorModel Error { get; set; }
 }

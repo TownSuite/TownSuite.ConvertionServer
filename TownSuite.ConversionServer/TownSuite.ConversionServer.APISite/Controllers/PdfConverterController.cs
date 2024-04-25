@@ -3,9 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using TownSuite.ConversionServer.APISite.Models;
+using TownSuite.ConversionServer.Common.Models.Services;
 using TownSuite.ConversionServer.Common.Validation;
 using TownSuite.ConversionServer.Interfaces.Common.Errors;
 using TownSuite.ConversionServer.Interfaces.Utilities.Logging;
@@ -48,8 +47,8 @@ namespace TownSuite.ConversionServer.APISite.Controllers
             }
         }
 
-        [HttpPost(nameof(FromStream))]
-        public async Task<Stream> FromStream()
+        [HttpPost(nameof(StreamToPng))]
+        public async Task<Stream> StreamToPng()
         {
             try
             {

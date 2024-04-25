@@ -18,8 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TownSuite.ConversionServer.Common.Models\TownSuite.ConversionServer.Common.Models.csproj" />
-    <ProjectReference Include="..\TownSuite.ConversionServer.Utilities.Newtonsoft\TownSuite.ConversionServer.Utilities.Newtonsoft.csproj" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
 </Project>
