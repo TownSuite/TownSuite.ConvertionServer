@@ -31,10 +31,10 @@ namespace TownSuite.ConversionServer.Common.Bytes
             get => Kilobytes / 1000M;
             set => Kilobytes = value * 1000M;
         }
-        public decimal MaxGigabytes
+        public decimal Gigabytes
         {
             get => Megabytes / 1000M;
-            set => Kilobytes = value * 1000M;
+            set => Megabytes = value * 1000M;
         }
     }
 }
