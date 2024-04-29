@@ -2,11 +2,17 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Net.Mime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TownSuite.ConversionServer.Common.Models;
 using TownSuite.ConversionServer.Common.Models.Conversions;
 using TownSuite.ConversionServer.Interfaces.Common.Bytes;
+using TownSuite.ConversionServer.Interfaces.Common.Validation;
 using TownSuite.ConversionServer.Interfaces.Utilities.Converters;
 
 namespace TownSuite.ConversionServer.Utilities.GhostScript
@@ -54,6 +60,26 @@ namespace TownSuite.ConversionServer.Utilities.GhostScript
             return pngBytes;
         }
 
+        public async Task<StreamFileResults> Convert(IUploadedStreamHandler streamHandler, CancellationToken cancellationToken = default)
+        {
+            var fullCancelToken = mergeTokenWithDefaultDuration(cancellationToken);
+
+            var pdfPath = CreateTempPdfPath();
+
+            using (var fileStream = System.IO.File.OpenWrite(pdfPath))
+            {
+                await streamHandler.CopyToAsync(fileStream, MaxBytes, fullCancelToken.Token);
+            }
+
+            var pngPaths = await Convert(pdfPath, fullCancelToken.Token);
+
+            var results = await GetStreamFromPathsAsync(pngPaths);
+
+            CleanFiles(pngPaths, pdfPath);
+
+            return results;
+        }
+
         #region "Private Methods"
         private async Task<IEnumerable<byte[]>> GetBytesFromPaths(IEnumerable<string> filePaths, CancellationToken cancellationToken)
         {
@@ -65,6 +91,39 @@ namespace TownSuite.ConversionServer.Utilities.GhostScript
             }
 
             return bytes;
+        }
+
+        private async Task<StreamFileResults> GetStreamFromPathsAsync(IEnumerable<string> filePaths)
+        {
+            var fileCount = filePaths.Count();
+            if (fileCount == 1)
+            {
+                var stream = System.IO.File.OpenRead(filePaths.First());
+                return new StreamFileResults(stream, "image/png");
+            }
+            else
+            {
+                var stream = await GetZipFileAsync(filePaths);
+                stream.Seek(0, SeekOrigin.Begin);
+                return new StreamFileResults(stream, MediaTypeNames.Application.Zip);
+            }
+        }
+
+        private async Task<Stream> GetZipFileAsync(IEnumerable<string> filePaths)
+        {
+            var stream = new MemoryStream();
+            using var zip = new ZipArchive(stream, ZipArchiveMode.Create, true);
+
+            foreach (var filePath in filePaths)
+            {
+                var fileName = Path.GetFileName(filePath);
+                var entry = zip.CreateEntry(fileName);
+
+                using var fileStream = System.IO.File.OpenRead(filePath);
+                using var zipStream = entry.Open();
+                await fileStream.CopyToAsync(zipStream);
+            }
+            return stream;
         }
 
         private string CreateTempPdfPath()

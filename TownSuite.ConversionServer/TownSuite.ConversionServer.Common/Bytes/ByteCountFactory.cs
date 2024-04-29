@@ -11,7 +11,7 @@ namespace TownSuite.ConversionServer.Common.Bytes
         {
             return new ByteCount()
             {
-                MaxGigabytes = gigabytes
+                Gigabytes = gigabytes
             };
         }
     }

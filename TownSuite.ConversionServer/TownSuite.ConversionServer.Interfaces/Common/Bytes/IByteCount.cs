@@ -9,6 +9,6 @@ namespace TownSuite.ConversionServer.Interfaces.Common.Bytes
         long Bytes { get; }
         decimal Kilobytes { get; }
         decimal Megabytes { get; }
-        decimal MaxGigabytes { get; }
+        decimal Gigabytes { get; }
     }
 }

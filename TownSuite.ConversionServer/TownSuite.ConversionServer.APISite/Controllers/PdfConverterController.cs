@@ -2,9 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Threading.Tasks;
-using TownSuite.ConversionServer.APISite.Models;
+using TownSuite.ConversionServer.Common.Models.Services;
+using TownSuite.ConversionServer.Common.Validation;
 using TownSuite.ConversionServer.Interfaces.Common.Errors;
 using TownSuite.ConversionServer.Interfaces.Utilities.Logging;
 
@@ -46,5 +47,24 @@ namespace TownSuite.ConversionServer.APISite.Controllers
             }
         }
 
+        [HttpPost(nameof(StreamToPng))]
+        public async Task<Stream> StreamToPng()
+        {
+            try
+            {
+                using var request = Request.Body;
+                var streamHandler = new UploadedStreamHandler(request);
+                var results = await _converter.Convert(streamHandler);
+
+                Response.Headers.ContentType = results.MediaType;
+                return results.File;
+            }
+            catch (Exception ex)
+            {
+                await _logger.LogError(ex);
+                Response.StatusCode = 500;
+                return null;
+            }
+        }
     }
 }
