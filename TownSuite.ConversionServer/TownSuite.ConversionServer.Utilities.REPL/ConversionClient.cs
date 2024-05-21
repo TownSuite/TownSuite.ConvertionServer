@@ -1,10 +1,13 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
+using TownSuite.ConversionServer.Common.Models.Services;
 
 namespace TownSuite.ConversionServer.Utilities.REPL
 {
@@ -21,13 +24,10 @@ namespace TownSuite.ConversionServer.Utilities.REPL
 
         public async Task ConvertPdfAsync(Stream body, Func<Stream, string, Task> withPng)
         {
-            if (_settings.ApiUrl is null || _settings.Username is null || _settings.Password is null)
-            {
-                throw new Exception("Missing settings. The ApiUrl, Username and Password are required.");
-            }
+            ValidateSettings();
 
             using var client = new HttpClient();
-            using HttpRequestMessage request = GetRequest(_settings.ApiUrl);
+            using HttpRequestMessage request = GetRequest("/PdfConverter/StreamToPng");
             request.Headers.Authorization = GetAuthHeader(request);
 
             using var content = new StreamContent(body);
@@ -38,9 +38,38 @@ namespace TownSuite.ConversionServer.Utilities.REPL
             await withPng(await response.Content.ReadAsStreamAsync(), response.Content.Headers.ContentType?.MediaType ?? string.Empty);
         }
 
-        private HttpRequestMessage GetRequest(string apiUrl)
+        public async Task<ItemResponseModel<IEnumerable<byte[]>>?> ConvertPdfAsBytesAsync(byte[] file)
         {
-            var url = apiUrl.TrimEnd('/') + "/PdfConverter/StreamToPng";
+            ValidateSettings();
+
+            using var client = new HttpClient();
+            using HttpRequestMessage request = GetRequest("/PdfConverter");
+            request.Headers.Authorization = GetAuthHeader(request);
+
+            var body = new ItemRequestModel<byte[]>()
+            {
+                Data = file,
+            };
+            using var content = JsonContent.Create(body);
+            request.Content = content;
+
+            using var response = await client.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<ItemResponseModel<IEnumerable<byte[]>>>(result);
+        }
+
+        private void ValidateSettings()
+        {
+            if (_settings.ApiUrl is null || _settings.Username is null || _settings.Password is null)
+            {
+                throw new Exception("Missing settings. The ApiUrl, Username and Password are required.");
+            }
+        }
+
+        private HttpRequestMessage GetRequest(string path)
+        {
+            var url = _settings.ApiUrl?.TrimEnd('/') + path;
             return new HttpRequestMessage(HttpMethod.Post, url);
         }
 
