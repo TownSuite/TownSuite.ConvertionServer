@@ -7,6 +7,7 @@ while (true)
 {
     Console.WriteLine("--- Available commands ---");
     Console.WriteLine("convert-pdf: Converts a PDF to PNG files.");
+    Console.WriteLine("convert-pdf-legacy: Converts a PDF to PNG files using byte[].");
     Console.WriteLine("exit: Exits the program.");
     Console.WriteLine("Enter a command:");
 
@@ -47,6 +48,48 @@ while (true)
                 using var fileResult = File.OpenWrite(pngPath);
                 await results.CopyToAsync(fileResult);
             });
+    }
+    else if (input.Equals("convert-pdf-legacy", StringComparison.OrdinalIgnoreCase))
+    {
+        Console.WriteLine("Give file path:");
+        var filePath = Console.ReadLine()?.Trim();
+        if (string.IsNullOrEmpty(filePath))
+        {
+            Console.WriteLine("Missing input.");
+            return;
+        }
+        var folderPath = Path.GetDirectoryName(filePath);
+        if (string.IsNullOrEmpty(folderPath))
+        {
+            Console.WriteLine("Invalid folder.");
+            return;
+        }
+
+        var file = await System.IO.File.ReadAllBytesAsync(filePath);
+
+        var client = new ConversionClient();
+        var response = await client.ConvertPdfAsBytesAsync(file);
+        if (response == null)
+        {
+            Console.WriteLine("An unexpected error occurred. A success status code was returned, but the response content was not found.");
+            return;
+        }
+        if (string.IsNullOrEmpty(response.Error?.Message) == false)
+        {
+            Console.WriteLine($"Error: {response.Error.Message}");
+            return;
+        }
+
+        Console.WriteLine($"Conversion complete. {response.Data.Count()} files returned.");
+        Console.WriteLine($"Downloading files.");
+        var count = 0;
+        foreach (var item in response.Data)
+        {
+            count++;
+            var downloadPath = Path.Combine(folderPath, $"result{count}.png");
+            await File.WriteAllBytesAsync(downloadPath, item);
+        }
+        Console.WriteLine($"Downloading finished!");
     }
     else if (input.Equals("exit", StringComparison.OrdinalIgnoreCase))
     {

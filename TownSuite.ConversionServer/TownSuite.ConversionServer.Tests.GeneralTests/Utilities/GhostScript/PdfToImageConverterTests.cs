@@ -27,7 +27,7 @@ namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.GhostScript
         public async Task ConvertTest()
         {
             var singlePage = System.IO.Path.Combine(GetAssetsDirectory(), "single_page_test.pdf");
-            Assert.IsTrue(System.IO.File.Exists(singlePage));
+            Assert.That(System.IO.File.Exists(singlePage), Is.True);
             var pageBytes = await System.IO.File.ReadAllBytesAsync(singlePage);
 
             var res = await _converter.Convert(pageBytes);
@@ -35,10 +35,10 @@ namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.GhostScript
             int resCount = 0;
             foreach (var image in res)
             {
-                Assert.Greater(image.Length, 0);
+                Assert.That(image.Length, Is.GreaterThan(0));
                 resCount++;
             }
-            Assert.AreEqual(1, resCount);
+            Assert.That(resCount, Is.EqualTo(1));
             
         }
 
@@ -46,7 +46,7 @@ namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.GhostScript
         public async Task ConvertMultiPageTest()
         {
             var multiPage = System.IO.Path.Combine(GetAssetsDirectory(), "multi_page_pdf.pdf");
-            Assert.IsTrue(System.IO.File.Exists(multiPage));
+            Assert.That(System.IO.File.Exists(multiPage), Is.True);
             var pageBytes = await System.IO.File.ReadAllBytesAsync(multiPage);
 
             var res = await _converter.Convert(pageBytes);
@@ -54,10 +54,10 @@ namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.GhostScript
             int resCount = 0;
             foreach (var image in res)
             {
-                Assert.Greater(image.Length, 0, "Image cannot be zero bytes");
+                Assert.That(image.Length, Is.GreaterThan(0), "Image cannot be zero bytes");
                 resCount++;
             }
-            Assert.Greater(resCount, 1, "Multipage test requires png file count greater than 1.");
+            Assert.That(resCount, Is.GreaterThan(1), "Multipage test requires png file count greater than 1.");
         }
 
         [Test]
@@ -77,7 +77,7 @@ namespace TownSuite.ConversionServer.Tests.GeneralTests.Utilities.GhostScript
         {
             string exeLocation = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             var dir = System.IO.Path.Combine(exeLocation, "Utilities", "GhostScript", "Assets");
-            Assert.IsTrue(System.IO.Directory.Exists(dir), "Testing assets directory missing. Ensure in same directory as executable.");
+            Assert.That(System.IO.Directory.Exists(dir), Is.True, "Testing assets directory missing. Ensure in same directory as executable.");
             return dir;
         }
     }
